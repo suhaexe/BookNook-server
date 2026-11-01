@@ -16,6 +16,9 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
+    if (!ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: "Book not found" });
+    }
     const book = await books.findOne({ _id: new ObjectId(req.params.id) });
     if (!book) return res.status(404).json({ message: "Book not found" });
     res.json(book);
@@ -36,7 +39,7 @@ router.post("/", requireAuth, async (req, res) => {
       description,
       totalCopies: Number(totalCopies),
       addedBy: {
-        name: req.user.name,
+        name: req.user.name || "Unknown",
         email: req.user.email,
       },
       createdAt: new Date(),
@@ -45,6 +48,7 @@ router.post("/", requireAuth, async (req, res) => {
     const result = await books.insertOne(newBook);
     res.status(201).json({ _id: result.insertedId, ...newBook });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Failed to add book" });
   }
 });

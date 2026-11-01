@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { requireAuth } from "./auth.js"; 
 import booksRouter from "./books.js";
+import borrowsRouter from "./borrows.js";
 
 const app = express();
 
@@ -16,6 +17,8 @@ app.get("/me", requireAuth, (req, res) => {
 });
 
 app.use("/books", booksRouter);
+
+app.use("/borrows", borrowsRouter);
 
 const port = process.env.PORT || 8000;
 app.listen(port, () => {
