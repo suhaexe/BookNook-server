@@ -53,4 +53,61 @@ router.post("/", requireAuth, async (req, res) => {
   }
 });
 
+router.patch("/:id", requireAuth, async (req, res) => {
+  try {
+    const bookId = req.params.id;
+    if (!ObjectId.isValid(bookId)) return res.status(400).json({ message: "Invalid ID" });
+
+    const book = await books.findOne({ _id: new ObjectId(bookId) });
+    if (!book) return res.status(404).json({ message: "Book not found" });
+
+    if (book.addedBy.email !== req.user.email) {
+      return res.status(403).json({ message: "You can only edit your own books" });
+    }
+
+    const { title, author, category, description, totalCopies, image } = req.body;
+
+    const updatedBook = await books.findOneAndUpdate(
+      { _id: new ObjectId(bookId) },
+      { 
+        $set: { 
+          title, 
+          author, 
+          category, 
+          description, 
+          totalCopies: Number(totalCopies),
+          image: image || book.image
+        } 
+      },
+      { returnDocument: "after" }
+    );
+
+    res.json(updatedBook);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update book" });
+  }
+});
+
+router.delete("/:id", requireAuth, async (req, res) => {
+  try {
+    const bookId = req.params.id;
+    if (!ObjectId.isValid(bookId)) return res.status(400).json({ message: "Invalid ID" });
+
+    const book = await books.findOne({ _id: new ObjectId(bookId) });
+    if (!book) return res.status(404).json({ message: "Book not found" });
+
+    if (book.addedBy.email !== req.user.email) {
+      return res.status(403).json({ message: "You can only delete your own books" });
+    }
+
+    await books.deleteOne({ _id: new ObjectId(bookId) });
+
+    res.json({ message: "Book deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to delete book" });
+  }
+});
+
 export default router;
