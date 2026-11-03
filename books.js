@@ -7,7 +7,15 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const allBooks = await books.find().sort({ createdAt: -1 }).toArray();
+    const limit = parseInt(req.query.limit) || 0;
+    
+    let query = books.find().sort({ createdAt: -1 });
+    
+    if (limit > 0) {
+      query = query.limit(limit);
+    }
+
+    const allBooks = await query.toArray();
     res.json(allBooks);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch books" });
